@@ -1,83 +1,74 @@
 'use strict';
 
-class CountdownTimer {
-  constructor({ selector, targetDate }) {
-    this.timerId = null;
-    this.targetDate = targetDate;
-    this.timerEl = selector;
-  }
-  start() {
-    // updates Countdown Timer once per second
-    this.timerId = setInterval(() => {
-      // calc difference between target and current time
-      const diff = this.targetDate.getTime() - Date.now();
+// ============= 1 ==============
+const delay = ms => {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve(ms);
+    }, ms);
+  });
+};
 
-      if (diff <= 0) {
-        this.stop();
-        return;
+const logger = time => console.log(`Resolved after ${time}ms`);
+
+// Вызовы функции для проверки
+delay(2000).then(logger); // Resolved after 2000ms
+delay(1000).then(logger); // Resolved after 1000ms
+delay(1500).then(logger); // Resolved after 1500ms
+
+// ============== 2 ==================
+const users = [
+  { name: 'Mango', active: true },
+  { name: 'Poly', active: false },
+  { name: 'Ajax', active: true },
+  { name: 'Lux', active: false },
+];
+
+const toggleUserState = (allUsers, userName) => {
+  const updatedUsers = allUsers.map(user =>
+    user.name === userName ? { ...user, active: !user.active } : user,
+  );
+
+  return Promise.resolve(updatedUsers);
+};
+
+const makeLog = updatedUsers => console.table(updatedUsers);
+
+// Вызовы функции для проверки
+toggleUserState(users, 'Mango').then(makeLog);
+toggleUserState(users, 'Lux').then(makeLog);
+
+// ============== 3 ===================
+
+const randomIntegerFromInterval = (min, max) => {
+  return Math.floor(Math.random() * (max - min + 1) + min);
+};
+
+const makeTransaction = transaction => {
+  const delay = randomIntegerFromInterval(200, 500);
+
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const canProcess = Math.random() > 0.3;
+
+      if (canProcess) {
+        resolve(transaction.id, delay);
       }
+      reject(transaction.id);
+    }, delay);
+  });
+};
 
-      // get time components from the time difference and then update
-      // values on the page
-      showCountdownTimer(this.getTimeComponents(diff), this.timerEl);
-    }, 1000);
-  }
+const logSuccess = (id, time) => {
+  console.log(`Transaction ${id} processed in ${time}ms`);
+};
 
-  stop() {
-    clearInterval(this.timerId);
+const logError = id => {
+  console.warn(`Error processing transaction ${id}. Please try again later.`);
+};
 
-    showCountdownTimer(
-      { days: '00', hours: '00', mins: '00', secs: '00' },
-      this.timerEl,
-    );
-  }
-
-  // getting time components from
-  getTimeComponents(time) {
-    const days = this.pad(Math.floor(time / (1000 * 60 * 60 * 24)));
-    const hours = this.pad(
-      Math.floor((time % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-    );
-    const mins = this.pad(Math.floor((time % (1000 * 60 * 60)) / (1000 * 60)));
-    const secs = this.pad(Math.floor((time % (1000 * 60)) / 1000));
-
-    return { days, hours, mins, secs };
-  }
-
-  // add '0' if num < 10
-  pad(num) {
-    return String(num).padStart(2, '0');
-  }
-}
-
-// ------------- class end ----------------------
-
-const timer = new CountdownTimer({
-  selector: '#timer-1',
-  targetDate: new Date(2022, 0, 1, 0, 0, 0),
-});
-timer.start();
-
-// show Countdown Timer
-function showCountdownTimer(timeComponenstObj, selector) {
-  const { days, hours, mins, secs } = timeComponenstObj;
-  const timerEl = document.querySelector(`${selector}`);
-  const timerString = `
-    <div class="field">
-      <span class="value" data-value="days">${days}</span>
-      <span class="label">Days</span>
-    </div>
-    <div class="field">
-      <span class="value" data-value="hours">${hours}</span>
-      <span class="label">Hours</span>
-    </div>
-    <div class="field">
-      <span class="value" data-value="mins">${mins}</span>
-      <span class="label">Minutes</span>
-    </div>
-    <div class="field">
-      <span class="value" data-value="secs">${secs}</span>
-      <span class="label">Seconds</span>
-    </div>`;
-  timerEl.innerHTML = timerString;
-}
+// Вызовы функции для проверки
+makeTransaction({ id: 70, amount: 150 }).then(logSuccess).catch(logError);
+makeTransaction({ id: 71, amount: 230 }).then(logSuccess).catch(logError);
+makeTransaction({ id: 72, amount: 75 }).then(logSuccess).catch(logError);
+makeTransaction({ id: 73, amount: 100 }).then(logSuccess).catch(logError);
